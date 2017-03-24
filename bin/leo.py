@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
@@ -9,7 +9,7 @@ try:
     from lxml import html as htmlparser
 except ImportError:
     print("Error: No lxml module found. "
-          "Install package python-lxml or python3-lxml")
+          "Install package python3-lxml")
     sys.exit(10)
 
 
@@ -18,7 +18,6 @@ __version__= "1.0"
 
 
 # Global URL
-# URL="http://pda.leo.org/?search={0}"
 URL="http://pda.leo.org/englisch-deutsch/{0}"
 
 
@@ -72,7 +71,7 @@ def formattable(entry):
          print("  {0}".format(c1))
 
 
-def extracttext(element):
+def _extracttext(element):
    x=[]
    t = "" if element.text is None else element.text.strip()
    if t:
@@ -97,6 +96,12 @@ def extracttext(element):
    else:
       return t
 
+
+def extracttext(element):
+    txt = element.xpath("string(.)").replace('\xa0', '')
+    return txt
+
+
 def format_as_table(row):
 
    for tr in row:
@@ -109,34 +114,32 @@ def format_as_table(row):
 
 
 def getResults(args, html):
-   line="-"*10
+    line="-"*10
+    data={"subst":      "Substantive",
+          "verb":       "Verbs",
+          "adjadv":     "Adjectives/Adverbs",
+          #"example":    "Beispiele",
+          #"phrase":     "Redewendung",
+          }
 
-   data={ "section-adjadv":     "Adjectives/Adverbs",
-          "section-verb":       "Verbs",
-          "section-subst":      "Substantive",
-         }
+    #if args.with_defs:
+    #   data.update({"definition": "Definitions"})
 
-   if args.with_defs:
-      data.update({"section-definition": "Definitions"})
+    if args.with_examples:
+       data.update({"example":    "Examples" })
 
-   if args.with_examples:
-      data.update({"section-example":    "Examples" })
+    if args.with_phrases:
+       data.update({"phrase":     "Redewendung" })
 
-   if args.with_phrases:
-      data.update({"section-phrase":     "Phrases/Collocations" })
-
-   #if args.with_forums:
-   #   data.update({ "forumResults":       "Forum Discussions" })
-
-   # Iterate over all keys in data:
-   for entry in data:
-      print("\n{0} {1} {0}".format(line, data[entry]))
-      try:
-         sections = html.get_element_by_id(entry)
-         trs = sections.xpath("table/tbody/tr[td[@class='tblf1-text']]")
-         format_as_table(trs)
-      except KeyError:
-         print("No {0} found".format(data[entry]))
+    found = set()
+    div = html.get_element_by_id('centerColumn')
+    for section in div.find_class("section")[:5]:
+        name = section.attrib.get('data-dz-name')
+        if name in data:
+            found.add(name)
+            print("\n{0} {1} {0}".format(line, data[name]))
+            trs = section.xpath("table/tbody/tr[td[@lang='en'] and td[@lang='de']]")
+            format_as_table(trs)
 
 
 if __name__ == "__main__":
