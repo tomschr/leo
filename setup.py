@@ -30,7 +30,9 @@ def requires(filename):
     with open(filename, 'r') as pipreq:
         for line in pipreq:
             line = line.strip()
-            if line.startswith('#') or not line:
+            # Checks if line starts with a comment or referencing
+            # external pip requirements file (with '-e'):
+            if line.startswith('#') or line.startswith('-') or not line:
                 continue
             modules.append(line)
     return modules
