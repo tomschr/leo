@@ -8,20 +8,11 @@ import argparse
 import logging
 from logging.config import dictConfig
 
-import requests
 import sys
-
-#try:
-from lxml import html as htmlparser
-#except ImportError:
-#    print("Error: No lxml module found. "
-#          "Install package python3-lxml")
-#    sys.exit(10)
 
 
 __author__ = "Thomas Schraitle <toms@suse.de>"
 __version__ = "1.0.0"
-
 
 # Global URL
 URL = "http://pda.leo.org/englisch-deutsch/{0}"
@@ -60,6 +51,21 @@ LOGLEVELS = {None: logging.WARNING,  # 0
 
 #: Instantiate our logger
 log = logging.getLogger(__name__)
+
+
+try:
+    import requests
+except ImportError:
+    log.fatal("ERROR: No requests module found. Install it with:\n"
+              "$ sudo zypper in python3-requests")
+    sys.exit(200)
+
+try:
+    from lxml import html as htmlparser
+except ImportError:
+    log.fatal("ERROR: no lxml module found. Install it with:\n"
+              "$ sudo zypper in python3-lxml")
+    sys.exit(10)
 
 
 def parse(cliargs=None):
