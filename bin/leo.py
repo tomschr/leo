@@ -5,23 +5,62 @@ from __future__ import print_function
 
 import sys
 import argparse
+import logging
+from logging.config import dictConfig
+
 try:
     from lxml import html as htmlparser
 except ImportError:
     print("Error: No lxml module found. "
           "Install package python3-lxml")
     sys.exit(10)
+import sys
 
 
 __author__ = "Thomas Schraitle <toms@suse.de>"
-__version__ = "1.0"
+__version__ = "1.0.0"
 
 
 # Global URL
 URL = "http://pda.leo.org/englisch-deutsch/{0}"
 
+#: The dictionary, used by :class:`logging.config.dictConfig`
+#: use it to setup your logging formatters, handlers, and loggers
+#: For details, see https://docs.python.org/3.4/library/logging.config.html#configuration-dictionary-schema
+DEFAULT_LOGGING_DICT = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'standard': {'format': '[%(levelname)s] %(name)s: %(message)s'},
+    },
+    'handlers': {
+        'default': {
+            'level': 'NOTSET',
+            'formatter': 'standard',
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        __name__: {
+            'handlers': ['default'],
+            'level': 'INFO',
+            'propagate': True
+        }
+    }
+}
 
-def parse():
+#: Map verbosity level (int) to log level
+LOGLEVELS = {None: logging.WARNING,  # 0
+             0: logging.WARNING,
+             1: logging.INFO,
+             2: logging.DEBUG,
+}
+
+#: Instantiate our logger
+log = logging.getLogger(__name__)
+
+
+def parse(cliargs=None):
     """Parse the command line """
     parser = argparse.ArgumentParser(description='Query Leo',
                                      usage='%(prog)s [OPTIONS] QUERYSTRING')
@@ -43,6 +82,10 @@ def parse():
                         help="Include phrases in the result "
                              "(default: %(default)s)",
                         )
+    parser.add_argument('-v', '--verbose',
+                        action="count",
+                        help="Raise verbosity level",
+                        )
     # parser.add_argument( '-F', '--with-forums',
     #   action="store_true",
     #   default=False,
@@ -52,14 +95,22 @@ def parse():
                         metavar="QUERYSTRING",
                         help="Query string",
                         )
-    return parser.parse_args()
+    args = parser.parse_args(cliargs)
+
+    # Setup logging and the log level according to the "-v" option
+    dictConfig(DEFAULT_LOGGING_DICT)
+    log.setLevel(LOGLEVELS.get(args.verbose, logging.DEBUG))
+    log.debug("CLI args: %s", args)
+    return args
 
 
 def getLeoPage(url):
     """Return root node of Leo's result HTML page
     """
+    log.debug("Trying to load %r...", url)
     doc = htmlparser.parse(url)
     html = doc.getroot()
+    log.debug("Got HTML page")
     return html
 
 
@@ -115,7 +166,10 @@ def format_as_table(row):
         print("{:<55} | {}".format(t1, t2))
 
 
-def getResults(args, html):
+def getResults(args, root):
+    """
+    """
+    log.debug("Analysing results...")
     line = "-" * 10
     data = {"subst":      "Substantive",
             "verb":       "Verbs",
@@ -147,15 +201,16 @@ def getResults(args, html):
 
 if __name__ == "__main__":
     args = parse()
-    print("Args={}".format(args))
     URL = URL.format(args.query)
-    print("Investigating \"{}\"...".format(URL))
+
+    returncode = 0
     try:
         HTML = getLeoPage(URL)
         getResults(args, HTML)
     except IOError:
         # Term wasn't found
-        print("No translation for {} was found".format(
-            args.query), file=sys.stderr)
+        log.error("No translation for %s was found", args.query)
+        returncode = 20
 
+    sys.exit(returncode)
 # EOF
