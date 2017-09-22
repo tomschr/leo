@@ -40,7 +40,7 @@ def requires(filename):
 
 setup(
     name='leo',
-    version='1.0.0',
+    version='1.0.1',
     license='GPL3',
     description='Translate with leo.org',
     author='Thomas Schraitle',

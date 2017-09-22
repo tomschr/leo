@@ -12,7 +12,7 @@ import sys
 
 
 __author__ = "Thomas Schraitle <toms@suse.de>"
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 # Global URL
 URL = "http://pda.leo.org/englisch-deutsch/{0}"
