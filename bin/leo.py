@@ -8,13 +8,15 @@ import argparse
 import logging
 from logging.config import dictConfig
 
-try:
-    from lxml import html as htmlparser
-except ImportError:
-    print("Error: No lxml module found. "
-          "Install package python3-lxml")
-    sys.exit(10)
+import requests
 import sys
+
+#try:
+from lxml import html as htmlparser
+#except ImportError:
+#    print("Error: No lxml module found. "
+#          "Install package python3-lxml")
+#    sys.exit(10)
 
 
 __author__ = "Thomas Schraitle <toms@suse.de>"
@@ -108,8 +110,12 @@ def getLeoPage(url):
     """Return root node of Leo's result HTML page
     """
     log.debug("Trying to load %r...", url)
-    doc = htmlparser.parse(url)
-    html = doc.getroot()
+    response = requests.get(url)
+    if not response.ok:
+        raise requests.exceptions.HTTPError(response)
+    # doc = htmlparser.parse(url)
+    doc = htmlparser.fromstring(response.text, base_url=url)
+    html = doc.getroottree()
     log.debug("Got HTML page")
     return html
 
@@ -188,6 +194,7 @@ def getResults(args, root):
         data.update({"phrase":     "Redewendung"})
 
     found = set()
+    html = root.getroot()
     div = html.get_element_by_id('centerColumn')
     for section in div.find_class("section")[:5]:
         name = section.attrib.get('data-dz-name')
@@ -205,8 +212,14 @@ if __name__ == "__main__":
 
     returncode = 0
     try:
-        HTML = getLeoPage(URL)
-        getResults(args, HTML)
+        doc = getLeoPage(URL)
+        getResults(args, doc)
+    except requests.exceptions.Timeout:
+        log.error("Timeout")
+        returncode = 10
+    except requests.exceptions.BaseHTTPError as err:
+        log.error("Basic HTTP error: %s", err)
+        returncode = 15
     except IOError:
         # Term wasn't found
         log.error("No translation for %s was found", args.query)
