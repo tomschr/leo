@@ -168,24 +168,26 @@ def extracttext(element):
 
 
 def format_as_table(row):
-    # run through the rows once to find the maximum width to format correctly
-    translation_widths = [
-            len(extracttext(c1).strip())
-            for c1, c2
-            in [tr.getchildren() for tr in row]]
-    width = max(translation_widths)
-
-    # loop again, knowing the maximum translation width to do the actual formatting
+    widths = []
+    translations = []
     for tr in row:
         c1, c2 = tr.getchildren()
-        # print(c1,c2)
         t1 = extracttext(c1).strip()
         t2 = extracttext(c2)
         t1 = " ".join(t1.split())
-        print("{left:<{width}} | {right}".format(
+
+        widths.append(len(t1))
+        translations.append((t1, t2))
+
+    max_width = max(widths)
+    lines = [
+        "{left:<{width}} | {right}".format(
             left = t1,
-            width = width,
-            right = t2))
+            width = max_width,
+            right = t2)
+        for t1, t2 in translations
+    ]
+    print("\n".join(lines))
 
 
 def getResults(args, root):
