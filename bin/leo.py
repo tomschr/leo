@@ -22,7 +22,8 @@ LANGUAGES = {
     "fr": "französisch",
     "es": "spanisch",
     "it": "italienisch",
-    "ch": "chinesisch",  # FIPS and NATO country code for China. ISO code for Switzerland
+    # FIPS and NATO country code for China. ISO code for Switzerland:
+    "ch": "chinesisch",
     "ru": "russisch",
     "pt": "portugiesisch",
     "pl": "polnisch"
@@ -58,7 +59,7 @@ LOGLEVELS = {None: logging.WARNING,  # 0
              0: logging.WARNING,
              1: logging.INFO,
              2: logging.DEBUG,
-}
+             }
 
 #: Instantiate our logger
 log = logging.getLogger(__name__)
@@ -87,6 +88,7 @@ def available_languages():
     language_strings = ["{0} ({1})".format(l, s) for s, l in LANGUAGES.items()]
     return ", ".join(language_strings)
 
+
 def lang_name(l=None):
     """Translate language shortcut to the full language name.
 
@@ -100,6 +102,7 @@ def lang_name(l=None):
             return l
         else:
             return list(LANGUAGES.values())[0]
+
 
 def lang_short(l=None):
     """Translate language name to the shortcut.
@@ -115,6 +118,7 @@ def lang_short(l=None):
                 return short
 
         return list(LANGUAGES.keys())[0]
+
 
 def parse(cliargs=None):
     """Parse the command line """
@@ -144,7 +148,10 @@ def parse(cliargs=None):
                         )
     parser.add_argument('-l', '--language',
                         action="store",
-                        help="Translate from/to a specific language by their full name or shortcut. Available languages: {}".format(available_languages()),
+                        help="Translate from/to a specific language "
+                             "by their full name or shortcut. "
+                             "Available languages: {}".format(
+                                 available_languages()),
                         )
 
     # parser.add_argument( '-F', '--with-forums',
@@ -235,9 +242,9 @@ def format_as_table(row):
     max_width = max(widths)
     lines = [
         "{left:<{width}} | {right}".format(
-            left = t1,
-            width = max_width,
-            right = t2)
+            left=t1,
+            width=max_width,
+            right=t2)
         for t1, t2 in translations
     ]
     print("\n".join(lines))
@@ -274,8 +281,8 @@ def getResults(args, root):
         if name in data:
             found.add(name)
             print("\n{0} {1} {0}".format(line, data[name]))
-            trs = section.xpath(
-                "table/tbody/tr[td[@lang='{0}'] and td[@lang='de']]".format(language_shortcut))
+            trs = section.xpath("table/tbody/tr[td[@lang='{0}'] and "
+                                "td[@lang='de']]".format(language_shortcut))
             format_as_table(trs)
 
 
@@ -300,4 +307,5 @@ if __name__ == "__main__":
         returncode = 20
 
     sys.exit(returncode)
+
 # EOF
