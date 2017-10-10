@@ -221,14 +221,26 @@ def extracttext(element):
 
 
 def format_as_table(row):
-
+    widths = []
+    translations = []
     for tr in row:
         c1, c2 = tr.getchildren()
-        # print(c1,c2)
         t1 = extracttext(c1).strip()
         t2 = extracttext(c2)
         t1 = " ".join(t1.split())
-        print("{:<55} | {}".format(t1, t2))
+
+        widths.append(len(t1))
+        translations.append((t1, t2))
+
+    max_width = max(widths)
+    lines = [
+        "{left:<{width}} | {right}".format(
+            left = t1,
+            width = max_width,
+            right = t2)
+        for t1, t2 in translations
+    ]
+    print("\n".join(lines))
 
 
 def getResults(args, root):
