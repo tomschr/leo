@@ -15,7 +15,18 @@ __author__ = "Thomas Schraitle <toms@suse.de>"
 __version__ = "1.0.1"
 
 # Global URL
-URL = "http://pda.leo.org/englisch-deutsch/{0}"
+URL = "http://pda.leo.org/{0}-deutsch/{1}"
+
+LANGUAGES = {
+    "en": "englisch",
+    "fr": "französisch",
+    "es": "spanisch",
+    "it": "italienisch",
+    "ch": "chinesisch",  # FIPS and NATO country code for China. ISO code for Switzerland
+    "ru": "russisch",
+    "pt": "portugiesisch",
+    "pl": "polnisch"
+}
 
 #: The dictionary, used by :class:`logging.config.dictConfig`
 #: use it to setup your logging formatters, handlers, and loggers
@@ -68,6 +79,43 @@ except ImportError:
     sys.exit(10)
 
 
+def available_languages():
+    """Bundles the available languages into one string.
+
+    Allows easily printing the available languages in the usage instructions.
+    """
+    language_strings = ["{0} ({1})".format(l, s) for s, l in LANGUAGES.items()]
+    return ", ".join(language_strings)
+
+def lang_name(l=None):
+    """Translate language shortcut to the full language name.
+
+    If an invalid shortcut or an unknown full name is given,
+    the first full language name is returned as a fallback.
+    """
+    try:
+        return LANGUAGES[l]
+    except KeyError:
+        if l in LANGUAGES.values():
+            return l
+        else:
+            return list(LANGUAGES.values())[0]
+
+def lang_short(l=None):
+    """Translate language name to the shortcut.
+
+    If an invalid name or an unknown shortcut is given,
+    the first available language shortcut is returned as a fallback.
+    """
+    if l in LANGUAGES:
+        return l
+    else:
+        for short, name in LANGUAGES.items():
+            if name == l:
+                return short
+
+        return list(LANGUAGES.keys())[0]
+
 def parse(cliargs=None):
     """Parse the command line """
     parser = argparse.ArgumentParser(description='Query Leo',
@@ -94,6 +142,11 @@ def parse(cliargs=None):
                         action="count",
                         help="Raise verbosity level",
                         )
+    parser.add_argument('-l', '--language',
+                        action="store",
+                        help="Translate from/to a specific language by their full name or shortcut. Available languages: {}".format(available_languages()),
+                        )
+
     # parser.add_argument( '-F', '--with-forums',
     #   action="store_true",
     #   default=False,
@@ -199,6 +252,8 @@ def getResults(args, root):
     if args.with_phrases:
         data.update({"phrase":     "Redewendung"})
 
+    language_shortcut = lang_short(args.language)
+
     found = set()
     html = root.getroot()
     div = html.get_element_by_id('centerColumn')
@@ -208,13 +263,14 @@ def getResults(args, root):
             found.add(name)
             print("\n{0} {1} {0}".format(line, data[name]))
             trs = section.xpath(
-                "table/tbody/tr[td[@lang='en'] and td[@lang='de']]")
+                "table/tbody/tr[td[@lang='{0}'] and td[@lang='de']]".format(language_shortcut))
             format_as_table(trs)
 
 
 if __name__ == "__main__":
     args = parse()
-    URL = URL.format(args.query)
+    language = lang_name(args.language)
+    URL = URL.format(language, args.query)
 
     returncode = 0
     try:
