@@ -11,9 +11,10 @@ following command after cloning this repository::
 
     $ python3 bin/leo.py
 
-Or copy the script into your `bin` folder:
+Or copy the script into your `bin` folder::
 
     $ cp bin/leo.py ~/bin
+
 
 Workflow
 ========
