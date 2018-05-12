@@ -1,5 +1,5 @@
-Translation of word through leo.org
-***********************************
+Translations through leo.org
+****************************
 
 The `leo` script expect a word, delegates it to leo.org and present the result.
 
