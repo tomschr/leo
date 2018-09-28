@@ -149,7 +149,7 @@ def default_lang():
         # Fallback to English
         if lang.upper() == 'C':
             lang = 'en'
-        return l
+        return lang
     except KeyError:
         return None
 
