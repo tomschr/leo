@@ -2,14 +2,19 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
-
-import sys
 import argparse
+
 import logging
 from logging.config import dictConfig
 
+import os
 import sys
 
+if sys.version_info[0:2] <= (3, 7):
+    from collections import OrderedDict
+else:
+    # Preserve insertion order of dict objects in v3.7
+    OrderedDict = dict
 
 __author__ = "Thomas Schraitle <toms@suse.de>"
 __version__ = "1.0.1"
@@ -17,21 +22,22 @@ __version__ = "1.0.1"
 # Global URL
 URL = "http://pda.leo.org/{0}-deutsch/{1}"
 
-LANGUAGES = {
-    "en": "englisch",
-    "fr": "französisch",
-    "es": "spanisch",
-    "it": "italienisch",
+LANGUAGES = OrderedDict(
+    en="englisch",
+    fr="französisch",
+    es="spanisch",
+    it="italienisch",
     # FIPS and NATO country code for China. ISO code for Switzerland:
-    "ch": "chinesisch",
-    "ru": "russisch",
-    "pt": "portugiesisch",
-    "pl": "polnisch"
-}
+    ch="chinesisch",
+    ru="russisch",
+    pt="portugiesisch",
+    pl="polnisch"
+    )
 
 #: The dictionary, used by :class:`logging.config.dictConfig`
 #: use it to setup your logging formatters, handlers, and loggers
-#: For details, see https://docs.python.org/3.4/library/logging.config.html#configuration-dictionary-schema
+#: For details, see
+# https://docs.python.org/3.4/library/logging.config.html#configuration-dictionary-schema
 DEFAULT_LOGGING_DICT = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -84,45 +90,78 @@ def available_languages():
     """Bundles the available languages into one string.
 
     Allows easily printing the available languages in the usage instructions.
+
+    :return: string of available languages
+    :rtype: str
     """
     language_strings = ["{0} ({1})".format(l, s) for s, l in LANGUAGES.items()]
     return ", ".join(language_strings)
 
 
-def lang_name(l=None):
+def lang_name(lang=None):
     """Translate language shortcut to the full language name.
 
     If an invalid shortcut or an unknown full name is given,
     the first full language name is returned as a fallback.
+
+    :param str lang: language code
+    :return: full language code
+    :rtype: str
     """
     try:
-        return LANGUAGES[l]
+        return LANGUAGES[lang]
     except KeyError:
-        if l in LANGUAGES.values():
-            return l
+        if lang in LANGUAGES.values():
+            return lang
         else:
             return list(LANGUAGES.values())[0]
 
 
-def lang_short(l=None):
+def lang_short(lang=None):
     """Translate language name to the shortcut.
 
     If an invalid name or an unknown shortcut is given,
     the first available language shortcut is returned as a fallback.
+
+    :param str lang: language code
+    :return: shortcut
+    :rtype: str
     """
-    if l in LANGUAGES:
-        return l
+    if lang in LANGUAGES:
+        return lang
     else:
         for short, name in LANGUAGES.items():
-            if name == l:
+            if name == lang:
                 return short
 
         return list(LANGUAGES.keys())[0]
 
 
+def default_lang():
+    """Returns the language part from the LANG environment variable
+       or None
+
+    :return: language code
+    :rtype: str | None
+    """
+    try:
+        lang = os.environ["LANG"].split("_")[0]
+        # Fallback to English
+        if lang.upper() == 'C':
+            lang = 'en'
+        return l
+    except KeyError:
+        return None
+
+
 def parse(cliargs=None):
-    """Parse the command line """
-    parser = argparse.ArgumentParser(description='Query Leo',
+    """Parse the command line and return parsed results
+
+    :param list cliargs: Arguments to parse or None (=use sys.argv)
+    :return: parsed CLI result
+    :rtype: :class:`argparse.Namespace`
+    """
+    parser = argparse.ArgumentParser(description='Query leo.org',
                                      usage='%(prog)s [OPTIONS] QUERYSTRING')
     parser.add_argument('-D', '--with-defs',
                         action="store_true",
@@ -148,8 +187,10 @@ def parse(cliargs=None):
                         )
     parser.add_argument('-l', '--language',
                         action="store",
+                        default=default_lang(),
                         help="Translate from/to a specific language "
-                             "by their full name or shortcut. "
+                             "by their full name or shortcut "
+                             "(default: %(default)s). "
                              "Available languages: {}".format(
                                  available_languages()),
                         )
@@ -174,60 +215,41 @@ def parse(cliargs=None):
 
 def getLeoPage(url):
     """Return root node of Leo's result HTML page
+
+    :param str url: the URL to be loaded
+    :return: the HTML tree
+    :rtype: :class:`lxml.html.HtmlElement`
     """
     log.debug("Trying to load %r...", url)
     response = requests.get(url)
     if not response.ok:
         raise requests.exceptions.HTTPError(response)
     # doc = htmlparser.parse(url)
-    doc = htmlparser.fromstring(response.text, base_url=url)
+    text = response.text
+    doc = htmlparser.fromstring(text, base_url=url)
     html = doc.getroottree()
     log.debug("Got HTML page")
     return html
 
 
-def formattable(entry):
-    """Format table entry and print formatted line
-    """
-    for td in entry:
-        for t in td.getchildren():
-            t.drop_tag()
-            c1 = t.text_content().encode("UTF-8")
-            print("  {0}".format(c1))
-
-
-def _extracttext(element):
-    x = []
-    t = "" if element.text is None else element.text.strip()
-    if t:
-        x.append(t)
-    # Iterate over all children of the element
-    for i in element.getchildren():
-        t = "" if i.text is None else i.text.strip()
-        if t:
-            x.append(t)
-
-        for j in i.getchildren():
-            t = "" if j.text is None else j.text.strip()
-            if t:
-                x.append(t)
-
-        if i.tail is not None:
-            x.append(i.tail.strip())
-
-    t = " ".join(x).strip().encode("UTF-8")
-    if sys.version_info.major > 2:
-        return t.decode("UTF-8")
-    else:
-        return t
-
-
 def extracttext(element):
-    txt = element.xpath("string(.)").replace('\xa0', '')
+    """Extract text from element
+
+    :param element: the element node
+    :return: fixed text content
+    :rtype: str
+    """
+    # Fix some encoding problems:
+    txt = element.text_content().replace('\xa0', '').replace('\xdf', 'ß')
     return txt
 
 
 def format_as_table(row):
+    """Format the row as a table and print it out
+
+    :param row: node of a row which contains <tr> elements
+    """
+    log.debug("Row: %s", row)
     widths = []
     translations = []
     for tr in row:
@@ -240,18 +262,26 @@ def format_as_table(row):
         translations.append((t1, t2))
 
     max_width = max(widths)
-    lines = [
-        "{left:<{width}} | {right}".format(
-            left=t1,
-            width=max_width,
-            right=t2)
-        for t1, t2 in translations
-    ]
-    print("\n".join(lines))
+    # lines = [
+    #    "{left:<{width}} | {right}".format(
+    #        left=t1,
+    #        width=max_width,
+    #        right=t2)
+    #    for t1, t2 in translations
+    # ]
+    for t1, t2 in translations:
+        print("{left:<{width}} | {right}".format(
+              left=t1,
+              width=max_width,
+              right=t2)
+              )
 
 
 def getResults(args, root):
-    """
+    """Print the results
+
+    :param args: parsed command line arguments
+    :param root: root element node
     """
     log.debug("Analysing results...")
     line = "-" * 10
