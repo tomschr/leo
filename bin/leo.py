@@ -258,9 +258,9 @@ def format_as_table(row):
         t1 = c1.strip()
         t1 = " ".join(t1.split())
         t1 = t1.replace("AE", " [AE]")  #TODO: fix this workaround
+        t1 = t1.replace("BE", " [BE]")  #TODO: fix this workaround
         t2 = c2.strip()
         t2 = " ".join(t2.split())
-        t2 = t2.replace("BE", " [BE]")  #TODO: fix this workaround
         widths.append(len(t1))
         translations.append((t1, t2))
 
