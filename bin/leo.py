@@ -253,11 +253,14 @@ def format_as_table(row):
     widths = []
     translations = []
     for tr in row:
-        c1, c2 = tr.getchildren()
-        t1 = extracttext(c1).strip()
-        t2 = extracttext(c2)
+        entry = tr.getchildren()
+        c1, c2 = [extracttext(en) for en in entry if len(extracttext(en))]
+        t1 = c1.strip()
         t1 = " ".join(t1.split())
-
+        t1 = t1.replace("AE", " [AE]")  #TODO: fix this workaround
+        t2 = c2.strip()
+        t2 = " ".join(t2.split())
+        t2 = t2.replace("BE", " [BE]")  #TODO: fix this workaround
         widths.append(len(t1))
         translations.append((t1, t2))
 
@@ -271,10 +274,10 @@ def format_as_table(row):
     # ]
     for t1, t2 in translations:
         print("{left:<{width}} | {right}".format(
-              left=t1,
-              width=max_width,
-              right=t2)
-              )
+            left=t1,
+            width=max_width,
+            right=t2)
+            )
 
 
 def getResults(args, root):
