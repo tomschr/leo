@@ -257,8 +257,8 @@ def format_as_table(row):
         c1, c2 = [extracttext(en) for en in entry if len(extracttext(en))]
         t1 = c1.strip()
         t1 = " ".join(t1.split())
-        t1 = t1.replace("AE", " [AE]")  #TODO: fix this workaround
-        t1 = t1.replace("BE", " [BE]")  #TODO: fix this workaround
+        t1 = t1.replace("AE", " [AE]")  # TODO: fix this workaround
+        t1 = t1.replace("BE", " [BE]")  # TODO: fix this workaround
         t2 = c2.strip()
         t2 = " ".join(t2.split())
         widths.append(len(t1))
