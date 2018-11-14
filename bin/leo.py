@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
 from __future__ import print_function
 import argparse
 
@@ -20,7 +19,7 @@ __author__ = "Thomas Schraitle <toms@suse.de>"
 __version__ = "1.0.1"
 
 # Global URL
-URL = "http://pda.leo.org/{0}-deutsch/{1}"
+url = "http://pda.leo.org/{0}-deutsch/{1}"
 
 LANGUAGES = OrderedDict(
     en="englisch",
@@ -213,26 +212,34 @@ def parse(cliargs=None):
     return args
 
 
-def getLeoPage(url):
+def get_leo_page(url):
     """Return root node of Leo's result HTML page
 
     :param str url: the URL to be loaded
-    :return: the HTML tree
-    :rtype: :class:`lxml.html.HtmlElement`
+    :return: the HTML page as text
+    :rtype: :class:`str`
     """
     log.debug("Trying to load %r...", url)
     response = requests.get(url)
     if not response.ok:
         raise requests.exceptions.HTTPError(response)
-    # doc = htmlparser.parse(url)
-    text = response.text
-    doc = htmlparser.fromstring(text, base_url=url)
-    html = doc.getroottree()
+    return response.text
+
+
+def parse_leo_page(text):
+    """Return root node of Leo's result HTML page
+
+    :param str text: the HTML page as text
+    :return: the HTML tree
+    :rtype: :class:`lxml.html.HtmlElement`
+    """
+    document = htmlparser.fromstring(text)
+    html = document.getroottree()
     log.debug("Got HTML page")
     return html
 
 
-def extracttext(element):
+def extract_text(element):
     """Extract text from element
 
     :param element: the element node
@@ -252,9 +259,10 @@ def format_as_table(row):
     log.debug("Row: %s", row)
     widths = []
     translations = []
+
     for tr in row:
         entry = tr.getchildren()
-        c1, c2 = [extracttext(en) for en in entry if len(extracttext(en))]
+        c1, c2 = [extract_text(en) for en in entry if len(extract_text(en))]
         t1 = c1.strip()
         t1 = " ".join(t1.split())
         t1 = t1.replace("AE", " [AE]")  # TODO: fix this workaround
@@ -265,13 +273,7 @@ def format_as_table(row):
         translations.append((t1, t2))
 
     max_width = max(widths)
-    # lines = [
-    #    "{left:<{width}} | {right}".format(
-    #        left=t1,
-    #        width=max_width,
-    #        right=t2)
-    #    for t1, t2 in translations
-    # ]
+
     for t1, t2 in translations:
         print("{left:<{width}} | {right}".format(
             left=t1,
@@ -280,7 +282,7 @@ def format_as_table(row):
             )
 
 
-def getResults(args, root):
+def get_results(args, root):
     """Print the results
 
     :param args: parsed command line arguments
@@ -291,12 +293,10 @@ def getResults(args, root):
     data = {"subst":      "Substantive",
             "verb":       "Verbs",
             "adjadv":     "Adjectives/Adverbs",
-            # "example":    "Beispiele",
-            # "phrase":     "Redewendung",
             }
 
-    # if args.with_defs:
-    #   data.update({"definition": "Definitions"})
+    if args.with_defs:
+        data.update({"definition": "Definitions"})
 
     if args.with_examples:
         data.update({"example":    "Examples"})
@@ -322,12 +322,12 @@ def getResults(args, root):
 if __name__ == "__main__":
     args = parse()
     language = lang_name(args.language)
-    URL = URL.format(language, args.query)
+    url = url.format(language, args.query)
 
     returncode = 0
     try:
-        doc = getLeoPage(URL)
-        getResults(args, doc)
+        doc = parse_leo_page(get_leo_page(url))
+        get_results(args, doc)
     except requests.exceptions.Timeout:
         log.error("Timeout")
         returncode = 10
