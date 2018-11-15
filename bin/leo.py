@@ -9,6 +9,7 @@ from logging.config import dictConfig
 import os
 import sys
 
+
 if sys.version_info[0:2] <= (3, 7):
     from collections import OrderedDict
 else:
@@ -68,7 +69,6 @@ LOGLEVELS = {None: logging.WARNING,  # 0
 
 #: Instantiate our logger
 log = logging.getLogger(__name__)
-
 
 try:
     import requests
@@ -247,7 +247,9 @@ def extract_text(element):
     :rtype: str
     """
     # Fix some encoding problems:
-    txt = element.text_content().replace('\xa0', '').replace('\xdf', 'ß')
+    txt = element.text_content().replace('\xa0', '')\
+                                .replace('\xdf', 'ß')\
+                                .replace('\n', '')
     return txt
 
 
@@ -299,10 +301,10 @@ def get_results(args, root):
         data.update({"definition": "Definitions"})
 
     if args.with_examples:
-        data.update({"example":    "Examples"})
+        data.update({"example": "Examples"})
 
     if args.with_phrases:
-        data.update({"phrase":     "Redewendung"})
+        data.update({"phrase": "Redewendung"})
 
     language_shortcut = lang_short(args.language)
 

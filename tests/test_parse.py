@@ -50,11 +50,26 @@ def test_parse_leo_page(monkeypatch):
 
 def test_extract_text():
     expected = ["subst_en_foo", "subst_de_foo"]
-    tr = html.fromstring(
-        '''<tr><td lang="en"><samp><a '''
-        '''href="/englisch-deutsch/subst_en_foo">{}'''
-        '''</a></samp></td><td lang="de"><samp><a '''
-        '''ref="/englisch-deutsch/subst_de_foo">{}'''
-        '''</a></samp></td></tr>'''.format(*expected))
+    tr = html.fromstring('''<tr><td lang="en"><samp><a '''
+                         '''href="/englisch-deutsch/subst_en_foo">{}'''
+                         '''</a></samp></td><td lang="de"><samp><a '''
+                         '''ref="/englisch-deutsch/subst_de_foo">{}'''
+                         '''</a></samp></td></tr>'''.format(*expected))
     tds_text = [leo.extract_text(td) for td in tr.getchildren()]
     assert tds_text == expected
+
+
+def test_format_as_table(capsys):
+    expected = ["foo", "bar", "foobar", "foobaz"]
+    tr = html.fromstring('''<tbody> <tr> <td lang="en"> <samp> <a
+        href="/englisch-deutsch/subst_en_foo"> {} </a> </samp>
+        </td> <td lang="de"> <samp> <a href="/englisch-deutsch/subst_de_foo">
+        {} </a> </samp> </td> </tr> <tr> <td lang="en"> <samp> <a
+        href="/englisch-deutsch/subst_en_bar"> <mark> {} </mark>
+        </a> </samp> </td> <td lang="de"> <samp> <a
+        href="/englisch-deutsch/subst_de_bar"> {} </a> </samp>
+        </td> </tr> </tbody>'''.format(*expected))
+    leo.format_as_table(tr)
+    captured = capsys.readouterr()
+    for e in expected:
+        assert e in captured.out
