@@ -30,7 +30,9 @@ def requires(filename):
     with open(filename, 'r') as pipreq:
         for line in pipreq:
             line = line.strip()
-            if line.startswith('#') or not line:
+            # Checks if line starts with a comment or referencing
+            # external pip requirements file (with '-e'):
+            if line.startswith('#') or line.startswith('-') or not line:
                 continue
             modules.append(line)
     return modules
@@ -38,7 +40,7 @@ def requires(filename):
 
 setup(
     name='leo',
-    version='0.1.0',
+    version='1.1.0',
     license='GPL3',
     description='Translate with leo.org',
     author='Thomas Schraitle',
@@ -47,7 +49,8 @@ setup(
     include_package_data=True,
     zip_safe=False,
     classifiers=[
-        # complete classifier list: http://pypi.python.org/pypi?%3Aaction=list_classifiers
+        # complete classifier list:
+        # http://pypi.python.org/pypi?%3Aaction=list_classifiers
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',

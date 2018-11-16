@@ -1,0 +1,6 @@
+# Pip requirements file
+
+-r requirements.txt
+bumpversion
+pytest
+lxml
