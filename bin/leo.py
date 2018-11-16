@@ -17,7 +17,7 @@ else:
     OrderedDict = dict
 
 __author__ = "Thomas Schraitle <toms@suse.de>"
-__version__ = "1.0.1"
+__version__ = "1.1.0"
 
 # Global URL
 url = "http://pda.leo.org/{0}-deutsch/{1}"

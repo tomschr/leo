@@ -1,0 +1,12 @@
+-------------------------------------------------------------------
+Fri Nov 16 14:40:31 CET 2018 - mrey@suse.com
+
+Version 1.1.0
+
+Bugfixes:
+ * Fix traceback errors (#3)
+ * Fix parsing of AE / BE (#4, #5)
+ 
+Enhancement:
+ * Add test cases (#6, #7, #8)
+ * Improve compatibility (#9)
