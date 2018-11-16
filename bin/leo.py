@@ -146,7 +146,9 @@ def default_lang():
     try:
         lang = os.environ["LANG"].split("_")[0]
         # Fallback to English
-        if lang.upper() == 'C':
+        # see https://www.gnu.org/software/libc/manual/
+        # html_node/Standard-Locales.html#Standard-Locales
+        if lang.upper() in ("C", "POSIX", ""):
             lang = 'en'
         return lang
     except KeyError:
