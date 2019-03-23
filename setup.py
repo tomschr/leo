@@ -71,7 +71,7 @@ setup(
     install_requires=requires('requirements.txt'),
     # Testing:
     setup_requires=['pytest-runner', ],
-    tests_require=['pytest', 'pytest-cov', 'pytest-catchlog'],
+    tests_require=requires('devel_requirements.txt'),
     #
     scripts=['bin/leo.py'],
 )

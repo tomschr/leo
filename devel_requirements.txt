@@ -1,6 +1,7 @@
 # Pip requirements file
 
 -r requirements.txt
-bumpversion
+bump2version
 pytest
-lxml
+pytest-cov
+pycodestyle
