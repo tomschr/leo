@@ -87,3 +87,10 @@ ENV/
 
 # Rope project settings
 .ropeproject
+
+# mypy
+.mypy_cache/
+
+# .diff & .patch files
+*.diff
+*.patch
