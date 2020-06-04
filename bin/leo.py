@@ -266,6 +266,7 @@ def format_as_table(row):
 
     for tr in row:
         entry = tr.getchildren()
+        entry = entry[4], entry[7]
         c1, c2 = [extract_text(en) for en in entry if len(extract_text(en))]
         t1 = c1.strip()
         t1 = " ".join(t1.split())
@@ -312,6 +313,7 @@ def get_results(args, root):
 
     found = set()
     html = root.getroot()
+    div = html.get_element_by_id('centerColumn')
     div = html.get_element_by_id('centerColumn')
     for section in div.find_class("section")[:5]:
         name = section.attrib.get('data-dz-name')
